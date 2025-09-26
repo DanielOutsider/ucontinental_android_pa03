@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "403630697470",
+    "project_id": "pa03chocano",
+    "storage_bucket": "pa03chocano.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403630697470:android:1afad21c8a51e14f412eaf",
+        "android_client_info": {
+          "package_name": "chocano.pa3.org"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLwVvF1YG39VI-rwGpmu99Oj_7t5twkDE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
