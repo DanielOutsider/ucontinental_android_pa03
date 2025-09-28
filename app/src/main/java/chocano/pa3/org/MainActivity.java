@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Oculta SOLO en Main
+        // Oculta el actionBar
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
         mAuth = FirebaseAuth.getInstance();
@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         registerButton = findViewById(R.id.register);
         loginButton = findViewById(R.id.login);
 
+        // Maneja el evento de clic del botón de registro
         registerButton.setOnClickListener(v -> {
             String email = emailField.getText().toString().trim();
             String password = passwordField.getText().toString();
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
             registerUser(email, password);
         });
 
+        // Maneja el evento de clic del botón de inicio de sesión
         loginButton.setOnClickListener(v -> {
             String email = emailField.getText().toString().trim();
             String password = passwordField.getText().toString();
@@ -49,18 +51,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // 🔐 Si ya hay sesión, salta directo a Home
+    // Si ya hay sesión, salta directo a Home
     @Override
     protected void onStart() {
         super.onStart();
         FirebaseUser current = FirebaseAuth.getInstance().getCurrentUser();
         if (current != null) {
-            // Si usas verificación de correo, puedes exigirla:
-            // if (!current.isEmailVerified()) return;
             goToHome();
         }
     }
 
+    // Validacion de campos
     private boolean validate(String email, String password) {
         boolean ok = true;
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         return ok;
     }
 
+    // metodo para registrar usuario
     private void registerUser(String email, String password) {
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
@@ -86,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    // metodo para iniciar sesion
     private void loginUser(String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
@@ -99,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    // metodo para navegar a HomeActivity
     private void goToHome() {
         startActivity(new Intent(this, HomeActivity.class));
         finish(); // evita volver a Main con "Atrás"

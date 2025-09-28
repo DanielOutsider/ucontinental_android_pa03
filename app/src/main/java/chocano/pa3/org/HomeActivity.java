@@ -38,12 +38,11 @@ import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
 
-    // UI
     private TextInputEditText etName, etEmail, etMessage;
     private MaterialButton btnSave, btnShow;
     private RecyclerView rvList;
 
-    // Firebase Auth + RTDB
+    // Firebase
     private FirebaseAuth auth;
     private DatabaseReference contactsRef;
 
@@ -65,10 +64,10 @@ public class HomeActivity extends AppCompatActivity {
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) { goToLogin(); return; }
 
-        // RTDB: referencia a /contacts
+        // RTDB: referencia a contacts table
         contactsRef = FirebaseDatabase.getInstance().getReference("contacts");
 
-        // Views
+        // controles
         etName    = findViewById(R.id.etName);
         etEmail   = findViewById(R.id.etEmail);
         etMessage = findViewById(R.id.etMessage);
@@ -78,14 +77,15 @@ public class HomeActivity extends AppCompatActivity {
 
         if (user.getEmail() != null) etEmail.setText(user.getEmail());
 
-        // Recycler
+        // Adaptador seteado a la lista
         adapter = new ContactAdapter();
         rvList.setLayoutManager(new LinearLayoutManager(this));
         rvList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         rvList.setAdapter(adapter);
 
-        // Guardar / Mostrar
+        // Guardar
         btnSave.setOnClickListener(v -> save());
+        // Mostrar lista
         btnShow.setOnClickListener(v -> { rvList.setVisibility(View.VISIBLE); loadOnce(); });
     }
 
@@ -95,6 +95,7 @@ public class HomeActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.home_menu, menu);
         return true;
     }
+    // Manejar selección del logout
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_logout) {
@@ -105,6 +106,7 @@ public class HomeActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    // Metodo que redirecciona al login y limpiar historial
     private void goToLogin() {
         Intent i = new Intent(this, MainActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -112,7 +114,7 @@ public class HomeActivity extends AppCompatActivity {
         finish();
     }
 
-    // ---------- RTDB: Guardar ----------
+    //  Guardar nuevo contacto
     private void save() {
         String nombre  = text(etName);
         String email   = text(etEmail);
@@ -122,7 +124,7 @@ public class HomeActivity extends AppCompatActivity {
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) { etEmail.setError("Correo inválido"); return; }
         if (TextUtils.isEmpty(mensaje)) { etMessage.setError("Requerido"); return; }
 
-        // Usamos push() para crear un ID único
+        // Usamos push para crear un ID único
         String key = contactsRef.push().getKey();
         if (key == null) { Toast.makeText(this, "No se pudo generar ID", Toast.LENGTH_LONG).show(); return; }
 
@@ -143,9 +145,9 @@ public class HomeActivity extends AppCompatActivity {
                 .addOnCompleteListener(t -> btnSave.setEnabled(true));
     }
 
-    // ---------- RTDB: Listar (una sola vez) ----------
+    //  metodo para Listar
     private void loadOnce() {
-        // Leemos todo /contacts y luego ordenamos por createdAt DESC en memoria
+        // Leemos contacts y ordena por fecha de creacion DESC
         contactsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Contact> list = new ArrayList<>();
@@ -153,7 +155,7 @@ public class HomeActivity extends AppCompatActivity {
                     Contact c = child.getValue(Contact.class);
                     if (c != null) list.add(c);
                 }
-                // Orden descendente por createdAt
+                // Orden descendente por fecha de creacion
                 Collections.sort(list, (a, b) -> Long.compare(b.createdAt, a.createdAt));
                 adapter.setItems(list);
                 Toast.makeText(HomeActivity.this, "Registros: " + list.size(), Toast.LENGTH_SHORT).show();
@@ -168,7 +170,7 @@ public class HomeActivity extends AppCompatActivity {
         return et.getText() == null ? "" : et.getText().toString().trim();
     }
 
-    // --------- Modelo y Adapter ---------
+    //  Modelo Adaptador
     public static class Contact {
         public String nombre;
         public String email;
@@ -178,16 +180,22 @@ public class HomeActivity extends AppCompatActivity {
         public Contact() {} // requerido por RTDB
     }
 
+    // RecyclerView Adapter y ViewHolder
     static class ContactAdapter extends RecyclerView.Adapter<ContactVH> {
+        // Lista de items
         private final List<Contact> items = new ArrayList<>();
+
+        // Actualiza la lista y notifica cambios
         void setItems(List<Contact> list) { items.clear(); items.addAll(list); notifyDataSetChanged(); }
 
+        // item_row.xml
         @NonNull @Override
         public ContactVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_row, parent, false);
             return new ContactVH(view);
         }
 
+        // Bind de datos
         @Override
         public void onBindViewHolder(@NonNull ContactVH h, int pos) {
             Contact c = items.get(pos);
@@ -196,9 +204,11 @@ public class HomeActivity extends AppCompatActivity {
             h.tvMessage.setText(c.mensaje);
         }
 
+        // retorna el conteo de la cantidad de items
         @Override public int getItemCount() { return items.size(); }
     }
 
+    // ViewHolder
     static class ContactVH extends RecyclerView.ViewHolder {
         final android.widget.TextView tvName, tvEmail, tvMessage;
         ContactVH(@NonNull View v) {

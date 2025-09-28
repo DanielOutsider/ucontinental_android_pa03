@@ -17,7 +17,6 @@
         android:theme="@style/Theme.PA03chocano"
         tools:targetApi="31">
 
-        <!-- DECLARA LA LAUNCHER ACTIVITY -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
