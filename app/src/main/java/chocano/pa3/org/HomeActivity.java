@@ -34,7 +34,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
 
-// Toggle hamburguesa
+        // Toggle action bar
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar,
                 R.string.nav_open, R.string.nav_close
@@ -43,7 +43,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
 
 
-// Carga inicial: Dashboard
+        // Carga inicial: Dashboard
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
@@ -54,7 +54,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-
+    // Maneja la selección de elementos del menú de navegación
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
@@ -72,9 +72,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(this, ProductsActivity.class));
         } else if (id == R.id.nav_orders) {
             startActivity(new Intent(this, OrdersActivity.class));
-
-        } else if (id == R.id.nav_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
 
         } else if (id == R.id.nav_logout) {
             com.google.firebase.auth.FirebaseAuth.getInstance().signOut();

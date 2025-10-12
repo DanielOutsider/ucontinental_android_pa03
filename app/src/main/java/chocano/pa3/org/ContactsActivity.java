@@ -34,7 +34,12 @@ public class ContactsActivity extends AppCompatActivity {
 
     private DatabaseReference contactsRef;
     private ValueEventListener listener;
+
+    // Adaptador del RecyclerView que muestra la lista de contactos
+
     private ContactAdapter adapter;
+
+    // Lista de contactos
     private List<Contact> currentList = new ArrayList<>();
 
     @Override
@@ -55,7 +60,7 @@ public class ContactsActivity extends AppCompatActivity {
         String uid = FirebaseAuth.getInstance().getUid();
         contactsRef = FirebaseDatabase.getInstance().getReference("contacts").child(uid);
 
-        // RecyclerView
+        // Lista que mantiene los contactos actuales en memoria
         RecyclerView rv = findViewById(R.id.recycler);
         rv.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ContactAdapter();
@@ -147,7 +152,7 @@ public class ContactsActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // Validar duplicado
+                    // Validar contacto duplicado
                     for (Contact c1 : currentList) {
                         if (existing == null || !c1.id.equals(existing.id)) {
                             if (c1.name.equalsIgnoreCase(n) || c1.phone.equals(p)) {

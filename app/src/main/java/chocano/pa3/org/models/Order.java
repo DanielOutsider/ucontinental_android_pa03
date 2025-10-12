@@ -9,7 +9,7 @@ public class Order {
     public String id;
     public String contactId;
     public String notes;
-    public String status; // pending | paid | cancelled
+    public String status; // pendiente | pagado | cancelado
     public long createdAt;
     public double total; // qty * price (simple)
     public Map<String, OrderItem> items = new HashMap<>();

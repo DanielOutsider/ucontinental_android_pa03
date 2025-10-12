@@ -7,6 +7,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import chocano.pa3.org.models.Order;
+import chocano.pa3.org.models.OrderItem;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
@@ -27,7 +30,11 @@ public class DashboardFragment extends Fragment {
 
     private TextView tvContactsCount, tvProductsCount, tvOrdersPending, tvOrdersPaid, tvOrdersToday, tvRevenueToday;
 
-    private DatabaseReference contactsRef, productsRef, ordersRef;
+    // Referencias a los nodos de Firebase
+    private DatabaseReference
+            contactsRef, productsRef, ordersRef;
+
+    // Listeners para escuchar cambios en tiempo real
     private ValueEventListener contactsListener, productsListener, ordersListener;
 
     public DashboardFragment() {}
@@ -41,7 +48,6 @@ public class DashboardFragment extends Fragment {
         CardView cardContacts = v.findViewById(R.id.card_contacts);
         CardView cardProducts = v.findViewById(R.id.card_products);
         CardView cardOrders   = v.findViewById(R.id.card_orders);
-        CardView cardReports  = v.findViewById(R.id.card_reports);
 
         cardContacts.setOnClickListener(view ->
                 startActivity(new android.content.Intent(requireContext(), ContactsActivity.class)));
@@ -52,9 +58,6 @@ public class DashboardFragment extends Fragment {
         cardOrders.setOnClickListener(view ->
                 startActivity(new android.content.Intent(requireContext(), OrdersActivity.class)));
 
-        cardReports.setOnClickListener(view ->
-                Toast.makeText(getContext(), "Próximamente: Reportes", Toast.LENGTH_SHORT).show()
-        );
 
         // Bienvenida
         TextView subtitle = v.findViewById(R.id.txtSubtitle);
@@ -84,6 +87,8 @@ public class DashboardFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+
+        // addValueEventListener se suscribe a cambios en tiempo real.
         if (contactsRef != null) {
             contactsListener = new ValueEventListener() {
                 @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -94,6 +99,7 @@ public class DashboardFragment extends Fragment {
             contactsRef.addValueEventListener(contactsListener);
         }
 
+        // addValueEventListener se suscribe a cambios en tiempo real.
         if (productsRef != null) {
             productsListener = new ValueEventListener() {
                 @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -104,6 +110,7 @@ public class DashboardFragment extends Fragment {
             productsRef.addValueEventListener(productsListener);
         }
 
+        // addValueEventListener se suscribe a cambios en tiempo real.
         if (ordersRef != null) {
             ordersListener = new ValueEventListener() {
                 @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -118,9 +125,9 @@ public class DashboardFragment extends Fragment {
                         Order o = s.getValue(Order.class);
                         if (o == null) continue;
 
-                        String status = o.status == null ? "pending" : o.status;
-                        if ("pending".equals(status)) pending++;
-                        else if ("paid".equals(status)) paid++;
+                        String status = o.status == null ? "pendiente" : o.status;
+                        if ("pendiente".equals(status)) pending++;
+                        else if ("pagado".equals(status)) paid++;
 
                         long ts = o.createdAt;
                         if (ts >= startDay && ts <= endDay) {
@@ -150,7 +157,8 @@ public class DashboardFragment extends Fragment {
         if (ordersRef   != null && ordersListener   != null) ordersRef.removeEventListener(ordersListener);
     }
 
-    /** Rango de hoy [00:00, 23:59:59.999] en millis (zona del dispositivo) */
+    // Rango de hoy [00:00, 23:59:59.999] en millis (zona del dispositivo)
+    // permite calcular si los pedidos fueron de hoy
     private long[] dayRangeMillis() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -168,16 +176,4 @@ public class DashboardFragment extends Fragment {
         return new long[]{start, end};
     }
 
-    // Model usado aquí (coincide con tu proyecto)
-    public static class Order {
-        public String id, contactId, notes, status;
-        public long createdAt;
-        public double total;
-        public java.util.Map<String, OrderItem> items;
-        public Order() {}
-    }
-    public static class OrderItem {
-        public String name; public int qty; public double price;
-        public OrderItem() {}
-    }
 }

@@ -27,6 +27,12 @@ public class ProductPickAdapter extends RecyclerView.Adapter<ProductPickAdapter.
         public int qty = 1;
     }
 
+    // ✅ Listener para avisar a la Activity cuando cambia algo
+    public interface OnChangeListener { void onChange(); }
+    private OnChangeListener changeListener;
+    public void setOnChangeListener(OnChangeListener l) { this.changeListener = l; }
+    private void notifyChanged() { if (changeListener != null) changeListener.onChange(); }
+
     private final List<Pick> picks = new ArrayList<>();
     private final NumberFormat currency = NumberFormat.getCurrencyInstance(new Locale("es", "PE"));
 
@@ -59,22 +65,33 @@ public class ProductPickAdapter extends RecyclerView.Adapter<ProductPickAdapter.
     @Override
     public void onBindViewHolder(@NonNull VH h, int pos) {
         Pick k = picks.get(pos);
+
+        // Desactivar momentáneamente el listener de CheckBox para evitar “rebotes”
         h.chk.setOnCheckedChangeListener(null);
+
         h.chk.setText(k.product.name);
         h.chk.setChecked(k.checked);
         h.price.setText(currency.format(k.product.price));
         h.qty.setText(String.valueOf(k.qty));
 
-        h.chk.setOnCheckedChangeListener((buttonView, isChecked) -> k.checked = isChecked);
+        // ✅ Cada cambio notifica a OrdersActivity (para recalcular el total)
+        h.chk.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            k.checked = isChecked;
+            notifyChanged();
+        });
+
         h.btnMinus.setOnClickListener(v -> {
             int q = Math.max(1, k.qty - 1);
             k.qty = q;
             h.qty.setText(String.valueOf(q));
+            notifyChanged();
         });
+
         h.btnPlus.setOnClickListener(v -> {
             int q = Math.min(999, k.qty + 1);
             k.qty = q;
             h.qty.setText(String.valueOf(q));
+            notifyChanged();
         });
     }
 

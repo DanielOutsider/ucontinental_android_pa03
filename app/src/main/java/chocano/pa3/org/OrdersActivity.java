@@ -25,6 +25,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -127,86 +129,129 @@ public class OrdersActivity extends AppCompatActivity {
 
     private void showOrderDialog(@Nullable Order existing){
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_order_products, null, false);
-        Spinner spContact = view.findViewById(R.id.spContact);
-        Spinner spStatus  = view.findViewById(R.id.spStatus);
+
+        MaterialAutoCompleteTextView autoContact = view.findViewById(R.id.autoContact);
+        MaterialAutoCompleteTextView autoStatus  = view.findViewById(R.id.autoStatus);
+        TextView txtTotal = view.findViewById(R.id.txtTotal);
         EditText edtNotes = view.findViewById(R.id.edtNotes);
         RecyclerView rvProducts = view.findViewById(R.id.rvProducts);
-        TextView txtTotal = view.findViewById(R.id.txtTotal);
 
         NumberFormat currency = NumberFormat.getCurrencyInstance(new Locale("es","PE"));
 
-        // contactos
-        final List<String> keys = new ArrayList<>(contactsMap.keySet());
-        final List<String> labels = new ArrayList<>();
-        for(String k: keys){ labels.add(contactsMap.get(k).name); }
-        spContact.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, labels));
+        // ---- clientes (autocompletar) ----
+        // contactsMap: Map<String, Contact> que ya usas en OrdersActivity (asegúrate de tenerlo cargado)
+        final List<String> contactKeys = new ArrayList<>(contactsMap.keySet());
+        final List<String> contactLabels = new ArrayList<>();
+        for(String k: contactKeys) contactLabels.add(contactsMap.get(k).name);
 
-        // status
-        String[] statuses = new String[]{"pending","paid","cancelled"};
-        spStatus.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, statuses));
+        ArrayAdapter<String> contactsAdapter =
+                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, contactLabels);
+        autoContact.setAdapter(contactsAdapter);
 
-        // cargar productos desde /products/{uid}
-        List<Product> products = new ArrayList<>();
-        String uid = FirebaseAuth.getInstance().getUid();
-        DatabaseReference productsRef = FirebaseDatabase.getInstance().getReference("products").child(uid);
+        // Si estás editando, precarga el nombre del contacto
+        if (existing != null && existing.contactId != null) {
+            int idx = Math.max(0, contactKeys.indexOf(existing.contactId));
+            if (idx >= 0 && idx < contactLabels.size()) autoContact.setText(contactLabels.get(idx), false);
+        }
 
+        // Al guardar recuperaremos el contactId resolviendo el nombre seleccionado.
+
+        // ---- estado (dropdown) ----
+        String[] statuses = new String[]{"pendiente", "pagado", "cancelado"};
+        ArrayAdapter<String> statusAdapter =
+                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, statuses);
+        autoStatus.setAdapter(statusAdapter);
+        if (existing != null && existing.status != null) autoStatus.setText(existing.status, false);
+        else autoStatus.setText(statuses[0], false);
+
+        // ---- productos (opcionales) ----
         ProductPickAdapter pickAdapter = new ProductPickAdapter();
         rvProducts.setLayoutManager(new LinearLayoutManager(this));
         rvProducts.setAdapter(pickAdapter);
 
-        ValueEventListener tmp = new ValueEventListener(){
-            @Override public void onDataChange(@NonNull DataSnapshot snapshot){
-                products.clear();
-                for(DataSnapshot s : snapshot.getChildren()){
+        // carga productos una vez
+        String uid = FirebaseAuth.getInstance().getUid();
+        DatabaseReference productsRef = FirebaseDatabase.getInstance().getReference("products").child(uid);
+        productsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Product> prods = new ArrayList<>();
+                for (DataSnapshot s: snapshot.getChildren()){
                     Product p = s.getValue(Product.class);
-                    if (p!=null){ p.id = s.getKey(); products.add(p);} }
-                pickAdapter.setProducts(products);
+                    if (p!=null){ p.id = s.getKey(); prods.add(p); }
+                }
+                pickAdapter.setProducts(prods);
+
+                // Si editas, marca los que están en el pedido
+                if (existing != null && existing.items != null) {
+                    for (ProductPickAdapter.Pick k : pickAdapter.getSelection()) {
+                        for (OrderItem oi : existing.items.values()) {
+                            if (oi.name != null && oi.name.equalsIgnoreCase(k.product.name)) {
+                                k.checked = true;
+                                k.qty = Math.max(1, oi.qty);
+                            }
+                        }
+                    }
+                    pickAdapter.notifyDataSetChanged();
+                }
                 updateTotal();
             }
-            @Override public void onCancelled(@NonNull DatabaseError error){}
+            @Override public void onCancelled(@NonNull DatabaseError error) {}
             private void updateTotal(){
-                double sum = 0; for(ProductPickAdapter.Pick k: pickAdapter.getSelection()){ if (k.checked) sum += (k.qty * k.product.price); }
+                double sum = 0;
+                for (ProductPickAdapter.Pick k: pickAdapter.getSelection()){
+                    if (k.checked) sum += k.qty * k.product.price;
+                }
                 txtTotal.setText("Total: " + currency.format(sum));
             }
-        };
-        productsRef.addListenerForSingleValueEvent(tmp);
+        });
 
-        // Observa cambios locales de qty/check para actualizar total (simple: al cerrar, recalcula)
+        // recalcular total en vivo
+        pickAdapter.setOnChangeListener(() -> {
+            double sum = 0;
+            for (ProductPickAdapter.Pick k: pickAdapter.getSelection()){
+                if (k.checked) sum += k.qty * k.product.price;
+            }
+            txtTotal.setText("Total: " + currency.format(sum));
+        });
 
-        // Si edición, precarga
-        if (existing != null){
-            if (existing.contactId != null){ int idx = Math.max(0, keys.indexOf(existing.contactId)); spContact.setSelection(idx); }
-            edtNotes.setText(existing.notes==null?"":existing.notes);
-            for (int i=0;i<statuses.length;i++){ if (statuses[i].equals(existing.status)){ spStatus.setSelection(i); break; } }
-        }
+        // Precargar notas
+        if (existing != null) edtNotes.setText(existing.notes == null ? "" : existing.notes);
 
-        new AlertDialog.Builder(this)
-                .setTitle(existing==null?"Nuevo pedido":"Editar pedido")
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(existing==null ? "Nuevo pedido" : "Editar pedido")
                 .setView(view)
                 .setNegativeButton("Cancelar", null)
                 .setPositiveButton("Guardar", (d,w)->{
-                    if (keys.isEmpty()) { toast("Primero crea un contacto"); return; }
-                    String contactId = keys.get(Math.max(0, spContact.getSelectedItemPosition()));
-                    String status = spStatus.getSelectedItem().toString();
-                    String notes = edtNotes.getText().toString().trim();
+                    // validar cliente seleccionado
+                    String chosenName = autoContact.getText()==null ? "" : autoContact.getText().toString().trim();
+                    int idx = contactLabels.indexOf(chosenName);
+                    if (idx < 0) { toast("Selecciona un cliente"); return; }
+                    String contactId = contactKeys.get(idx);
 
-                    // construir Order con snapshot de precios
-                    Order o = (existing==null? new Order(): existing);
-                    o.contactId = contactId; o.status = status; o.notes = notes;
+                    String status = autoStatus.getText()==null ? "pending" : autoStatus.getText().toString();
+                    String notes  = edtNotes.getText()==null ? "" : edtNotes.getText().toString().trim();
+
+                    Order o = (existing==null) ? new Order() : existing;
                     if (existing==null) o.createdAt = System.currentTimeMillis();
+                    o.contactId = contactId;
+                    o.status = status;
+                    o.notes = notes;
+
+                    // construir items (opcional — si no hay ninguno seleccionado, queda vacío)
                     o.items = new java.util.HashMap<>();
                     double total = 0;
                     int i = 1;
-                    for(ProductPickAdapter.Pick k: pickAdapter.getSelection()){
-                        if (!k.checked) continue; // solo seleccionados
-                        String key = "item"+ (i++);
-                        // snapshot del precio actual
-                        o.items.put(key, new chocano.pa3.org.models.OrderItem(k.product.name, k.qty, k.product.price));
+                    for (ProductPickAdapter.Pick k: pickAdapter.getSelection()){
+                        if (!k.checked) continue;
+                        String ikey = "item"+(i++);
+                        o.items.put(ikey, new OrderItem(k.product.name, k.qty, k.product.price));
                         total += k.qty * k.product.price;
                     }
                     o.total = total;
-                    String key = (existing==null? ordersRef.push().getKey(): o.id);
-                    o.id = key; ordersRef.child(key).setValue(o);
+
+                    String key = (existing==null) ? ordersRef.push().getKey() : o.id;
+                    o.id = key;
+                    ordersRef.child(key).setValue(o);
                 })
                 .show();
     }

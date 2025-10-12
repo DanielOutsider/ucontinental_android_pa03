@@ -62,7 +62,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.VH> {
     @Override
     public void onBindViewHolder(@NonNull VH h, int pos) {
         Order o = data.get(pos);
-        h.title.setText("Pedido · " + (o.status == null ? "pending" : o.status));
+        h.title.setText("Pedido · " + (o.status == null ? "pendiente" : o.status));
         h.subtitle.setText(sdf.format(new Date(o.createdAt)) + (o.notes!=null && !o.notes.isEmpty()? " · " + o.notes: ""));
         h.amount.setText(currency.format(o.total));
 
