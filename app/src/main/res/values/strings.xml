@@ -1,4 +1,11 @@
 <resources>
-    <string name="app_name">PA03-chocano</string>
+    <string name="app_name">Almacen Dchocano</string>
     <string name="logout">Cerrar sesión</string>
+    <string name="nav_open">Abrir menú</string>
+    <string name="nav_close">Cerrar menú</string>
+    <string name="menu_dashboard">Dashboard</string>
+    <string name="menu_contacts">Contactos</string>
+    <string name="menu_orders">Pedidos</string>
+    <string name="menu_settings">Ajustes</string>
+    <string name="menu_logout">Salir</string>
 </resources>

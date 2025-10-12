@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:id="@+id/metrics"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:id="@+id/tvContactsCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Contactos: 0"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:paddingBottom="4dp"/>
+
+        <!-- 👇 NUEVA MÉTRICA -->
+        <TextView
+            android:id="@+id/tvProductsCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Productos: 0"
+            android:paddingBottom="4dp"
+            android:textStyle="bold"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvOrdersPending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pedidos pendientes: 0"
+            android:paddingBottom="2dp"/>
+
+        <TextView
+            android:id="@+id/tvOrdersPaid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pedidos pagados: 0"
+            android:paddingBottom="2dp"/>
+
+        <TextView
+            android:id="@+id/tvOrdersToday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pedidos hoy: 0"
+            android:paddingBottom="2dp"/>
+
+        <TextView
+            android:id="@+id/tvRevenueToday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ingresos hoy: 0.00"/>
+
+    </LinearLayout>
+</merge>

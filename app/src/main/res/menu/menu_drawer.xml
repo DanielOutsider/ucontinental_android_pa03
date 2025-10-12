@@ -1,25 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
+
         <item
             android:id="@+id/nav_dashboard"
             android:icon="@android:drawable/ic_menu_view"
-            android:title="@string/menu_dashboard"/>
+            android:title="Dashboard" />
+
         <item
             android:id="@+id/nav_contacts"
             android:icon="@android:drawable/ic_menu_myplaces"
-            android:title="@string/menu_contacts"/>
+            android:title="Contactos" />
+
+        <!-- 🔹 NUEVO: enlace a Productos -->
+        <item
+            android:id="@+id/nav_products"
+            android:icon="@drawable/ic_products_24"
+            android:title="Productos" />
+
         <item
             android:id="@+id/nav_orders"
             android:icon="@android:drawable/ic_menu_agenda"
-            android:title="@string/menu_orders"/>
+            android:title="Pedidos" />
+
         <item
             android:id="@+id/nav_settings"
             android:icon="@android:drawable/ic_menu_preferences"
-            android:title="@string/menu_settings"/>
+            android:title="Ajustes" />
     </group>
+
     <item
         android:id="@+id/nav_logout"
         android:icon="@android:drawable/ic_lock_power_off"
-        android:title="@string/menu_logout"/>
+        android:title="Salir" />
 </menu>
